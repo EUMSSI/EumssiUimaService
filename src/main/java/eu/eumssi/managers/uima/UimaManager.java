@@ -64,8 +64,6 @@ public class UimaManager {
 	 */
 	private Properties properties;
 
-	private JCasIterable pipeline;
-
 	private AnalysisEngine ae;
 
 	private String dbpediaService;
@@ -113,7 +111,7 @@ public class UimaManager {
 		AnalysisEngineDescription dbpedia = createEngineDescription(SpotlightAnnotator.class,
 				//SpotlightAnnotator.PARAM_ENDPOINT, "http://localhost:2222/rest",
 				SpotlightAnnotator.PARAM_ENDPOINT, this.dbpediaService,
-				SpotlightAnnotator.PARAM_CONFIDENCE, 0.6f,
+				SpotlightAnnotator.PARAM_CONFIDENCE, 0.35f,
 				SpotlightAnnotator.PARAM_ALL_CANDIDATES, false);
 
 		AnalysisEngineDescription ner = createEngineDescription(StanfordNamedEntityRecognizer.class);
