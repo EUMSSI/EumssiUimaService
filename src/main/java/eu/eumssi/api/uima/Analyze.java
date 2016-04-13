@@ -109,5 +109,15 @@ public class Analyze {
 		return false;
 	}
 		
+	/** main method for debugging, runs the service with a standard text.
+	 * @param args
+	 * @throws Exception
+	 */
+	public static void main(String[] args) throws Exception {
+		Analyze ta = new Analyze();
+		Response res = ta.analyzePOST("Obama visits Merkel in Berlin.");
+		System.out.print(res.toString());
+		System.out.print(res.getEntity().toString());
+	}
 
 }

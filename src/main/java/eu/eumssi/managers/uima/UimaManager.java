@@ -118,8 +118,8 @@ public class UimaManager {
 
 		AnalysisEngineDescription validate = createEngineDescription(ConfirmLinkAnnotator.class);
 
-		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
-		this.ae = createEngine(createEngineDescription(dbpedia));
+		this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
+		//this.ae = createEngine(createEngineDescription(dbpedia));
 	}
 
 	/**
