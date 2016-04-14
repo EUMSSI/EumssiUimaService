@@ -9,9 +9,11 @@ import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.logging.Log;
@@ -27,6 +29,9 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.dbpedia.spotlight.uima.SpotlightAnnotator;
 import org.dbpedia.spotlight.uima.types.DBpediaResource;
 import org.dbpedia.spotlight.uima.types.TopDBpediaResource;
+
+import com.iai.uima.analysis_component.KeyPhraseAnnotator;
+import com.iai.uima.jcas.tcas.KeyPhraseAnnotationEnriched;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.languagetool.LanguageToolSegmenter;
@@ -118,8 +123,14 @@ public class UimaManager {
 
 		AnalysisEngineDescription validate = createEngineDescription(ConfirmLinkAnnotator.class);
 
+		AnalysisEngineDescription key = createEngineDescription(KeyPhraseAnnotator.class,
+				KeyPhraseAnnotator.PARAM_LANGUAGE, "en",
+				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 80
+				//KeyPhraseAnnotator.PARAM_STOPWORDLIST,System.getProperty("KEA_HOME")+"/data/stopwords/stopwords_en.txt"
+				);
+
 		this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
-		//this.ae = createEngine(createEngineDescription(dbpedia));
+		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate, key));
 	}
 
 	/**
@@ -137,6 +148,43 @@ public class UimaManager {
 		return true;		
 	}
 
+	/** convert DBpedia resource types to Stanford NER types
+	 * @param types space separated list of DBpedia types
+	 * @return set of matching NER types
+	 */
+	private static Set<String> convertTypes(String types) {
+		Set<String> typeSet = new HashSet<String>();
+		if (types.matches("(PERSON)|(I-PER)|(.*Person.*)")) typeSet.add("PERSON");
+		if (types.matches("(LOCATION)|(I-LOC)|(.*Place.*)")) 
+			typeSet.add("LOCATION");
+		if (types.matches("(ORGANIZATION)|(I-ORG)|(.*Organisation.*)")) typeSet.add("ORGANIZATION");
+		if (types.matches("(MISC)|(I-MISC)")) typeSet.add("MISC");
+		if (types.matches(".*City.*"))
+			typeSet.add("City");
+		if (types.matches(".*Country.*")) typeSet.add("Country");
+		if (typeSet.isEmpty()) {
+			typeSet.add("other");
+		}
+		return typeSet;
+	}
+
+	/** adds entities/resources to the entityMap structure according to the entity type
+	 * @param entityMap MongoDB structure to be filled
+	 * @param type type of the entity to add
+	 * @param entity the entity name/URI
+	 */
+	@SuppressWarnings("unchecked")
+	private static void addWithType(Map<String,Object> entityMap, String type, Map<String,Object> entity) {
+		List<Object> entityList = null;
+		// create field for each entity type
+		if (entityMap.containsKey(type)) {
+			entityList = (List<Object>) entityMap.get(type);
+		} else {
+			entityList = new ArrayList<Object>();
+			entityMap.put(type, entityList);
+		}
+		entityList.add(entity);
+	}
 
 	/**
 	 * analyzes a given text
@@ -152,7 +200,7 @@ public class UimaManager {
 			jCas.setDocumentLanguage("en");
 			this.ae.process(jCas);
 
-			ArrayList dbpediaList = new ArrayList();
+			Map<String, Object> dbpediaMap = new HashMap<String,Object>();
 			for (DBpediaResource resource : select(jCas, TopDBpediaResource.class)) {
 				Map<String, Object> res = new HashMap<String,Object>();
 				res.put("text", resource.getCoveredText());
@@ -160,20 +208,41 @@ public class UimaManager {
 				res.put("type", resource.getTypes());
 				res.put("begin", resource.getBegin());
 				res.put("end", resource.getEnd());
-				dbpediaList.add(res);
+				for (String type : convertTypes((String) res.get("type"))) {
+					addWithType(dbpediaMap, type, res);
+				}
+				addWithType(dbpediaMap, "all", res);
 			}
-			analysisResult.put("dbpedia", dbpediaList);
+			analysisResult.put("dbpedia", dbpediaMap);
 
-			ArrayList stanfordList = new ArrayList();
+			Map<String, Object> stanfordMap = new HashMap<String,Object>();
 			for (NamedEntity entity : select(jCas, NamedEntity.class)) {
 				Map<String, Object> res = new HashMap<String,Object>();
 				res.put("text", entity.getCoveredText());
 				res.put("type", entity.getValue());
 				res.put("begin", entity.getBegin());
 				res.put("end", entity.getEnd());
-				stanfordList.add(res);
+				for (String type : convertTypes((String) res.get("type"))) {
+					addWithType(stanfordMap, type, res);
+				}
+				addWithType(stanfordMap, "all", res);
 			}
-			analysisResult.put("stanford", stanfordList);
+			analysisResult.put("stanford", stanfordMap);
+
+			ArrayList<Map<String, Object>> keaList = new ArrayList<Map<String, Object>>();
+			for (KeyPhraseAnnotationEnriched entity : select(jCas, KeyPhraseAnnotationEnriched.class)) {
+				Map<String, Object> res = new HashMap<String,Object>();
+				res.put("text", entity.getCoveredText());
+				res.put("keyphrase", entity.getKeyPhrase());
+				res.put("stemmed", entity.getStem());
+				res.put("rank", entity.getRank());
+				res.put("probability", entity.getProbability());
+				res.put("begin", entity.getBegin());
+				res.put("end", entity.getEnd());
+				keaList.add(res);
+			}
+			analysisResult.put("kea", keaList);
+
 			return analysisResult;
 		} catch (UIMAException e) {
 			log.error("Error processing document", e);

@@ -129,6 +129,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>com.iai.uima</groupId>
+			<artifactId>kea-annotator</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.stanfordnlp-model-ner-en-all.3class.distsim.crf</artifactId>
 			<version>20150420.1</version>
