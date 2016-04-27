@@ -129,8 +129,8 @@ public class UimaManager {
 				//KeyPhraseAnnotator.PARAM_STOPWORDLIST,System.getProperty("KEA_HOME")+"/data/stopwords/stopwords_en.txt"
 				);
 
-		this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
-		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate, key));
+		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
+		this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate, key));
 	}
 
 	/**
