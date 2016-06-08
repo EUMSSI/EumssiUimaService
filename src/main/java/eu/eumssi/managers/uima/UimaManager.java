@@ -15,6 +15,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.Comparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +34,8 @@ import org.dbpedia.spotlight.uima.types.DBpediaResource;
 import org.dbpedia.spotlight.uima.types.TopDBpediaResource;
 
 import com.iai.uima.analysis_component.KeyPhraseAnnotator;
+import com.iai.uima.jcas.tcas.KeyPhraseAnnotation;
+import com.iai.uima.jcas.tcas.KeyPhraseAnnotationDeprecated;
 import com.iai.uima.jcas.tcas.KeyPhraseAnnotationEnriched;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -125,8 +130,7 @@ public class UimaManager {
 
 		AnalysisEngineDescription key = createEngineDescription(KeyPhraseAnnotator.class,
 				KeyPhraseAnnotator.PARAM_LANGUAGE, "en",
-				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 80
-				//KeyPhraseAnnotator.PARAM_STOPWORDLIST,System.getProperty("KEA_HOME")+"/data/stopwords/stopwords_en.txt"
+				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 5
 				);
 
 		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
@@ -230,17 +234,20 @@ public class UimaManager {
 			analysisResult.put("stanford", stanfordMap);
 
 			ArrayList<Map<String, Object>> keaList = new ArrayList<Map<String, Object>>();
-			for (KeyPhraseAnnotationEnriched entity : select(jCas, KeyPhraseAnnotationEnriched.class)) {
-				Map<String, Object> res = new HashMap<String,Object>();
-				res.put("text", entity.getCoveredText());
-				res.put("keyphrase", entity.getKeyPhrase());
-				res.put("stemmed", entity.getStem());
-				res.put("rank", entity.getRank());
-				res.put("probability", entity.getProbability());
-				res.put("begin", entity.getBegin());
-				res.put("end", entity.getEnd());
-				keaList.add(res);
+			for (KeyPhraseAnnotation entity : select(jCas, KeyPhraseAnnotation.class)) {
+				if (!(entity instanceof KeyPhraseAnnotationDeprecated)) {
+					Map<String, Object> res = new HashMap<String,Object>();
+					res.put("text", entity.getCoveredText());
+					res.put("keyphrase", entity.getKeyPhrase());
+					res.put("stemmed", entity.getStem());
+					res.put("rank", entity.getRank());
+					res.put("probability", entity.getProbability());
+					res.put("begin", entity.getBegin());
+					res.put("end", entity.getEnd());
+					keaList.add(res);
+				}
 			}
+			keaList.sort(Comparator.comparingInt((Map<String, Object> k) -> (Integer) k.get("rank")));
 			analysisResult.put("kea", keaList);
 
 			return analysisResult;
