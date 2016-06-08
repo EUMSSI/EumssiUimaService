@@ -130,7 +130,7 @@ public class UimaManager {
 
 		AnalysisEngineDescription key = createEngineDescription(KeyPhraseAnnotator.class,
 				KeyPhraseAnnotator.PARAM_LANGUAGE, "en",
-				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 5
+				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 80
 				);
 
 		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
