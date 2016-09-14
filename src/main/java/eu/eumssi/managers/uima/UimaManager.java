@@ -206,16 +206,19 @@ public class UimaManager {
 
 			Map<String, Object> dbpediaMap = new HashMap<String,Object>();
 			for (DBpediaResource resource : select(jCas, TopDBpediaResource.class)) {
-				Map<String, Object> res = new HashMap<String,Object>();
-				res.put("text", resource.getCoveredText());
-				res.put("uri", resource.getUri());
-				res.put("type", resource.getTypes());
-				res.put("begin", resource.getBegin());
-				res.put("end", resource.getEnd());
-				for (String type : convertTypes((String) res.get("type"))) {
-					addWithType(dbpediaMap, type, res);
+				// multiword or contains upper case
+				if (resource.getCoveredText().contains(" ") || !resource.getCoveredText().equals(resource.getCoveredText().toLowerCase())) {
+					Map<String, Object> res = new HashMap<String,Object>();
+					res.put("text", resource.getCoveredText());
+					res.put("uri", resource.getUri());
+					res.put("type", resource.getTypes());
+					res.put("begin", resource.getBegin());
+					res.put("end", resource.getEnd());
+					for (String type : convertTypes((String) res.get("type"))) {
+						addWithType(dbpediaMap, type, res);
+					}
+					addWithType(dbpediaMap, "all", res);
 				}
-				addWithType(dbpediaMap, "all", res);
 			}
 			analysisResult.put("dbpedia", dbpediaMap);
 
