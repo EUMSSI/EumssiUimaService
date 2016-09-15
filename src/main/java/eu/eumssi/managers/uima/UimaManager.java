@@ -1,23 +1,20 @@
 package eu.eumssi.managers.uima;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.ToIntFunction;
-import java.util.Comparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +23,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.pipeline.JCasIterable;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dbpedia.spotlight.uima.SpotlightAnnotator;
@@ -36,15 +32,14 @@ import org.dbpedia.spotlight.uima.types.TopDBpediaResource;
 import com.iai.uima.analysis_component.KeyPhraseAnnotator;
 import com.iai.uima.jcas.tcas.KeyPhraseAnnotation;
 import com.iai.uima.jcas.tcas.KeyPhraseAnnotationDeprecated;
-import com.iai.uima.jcas.tcas.KeyPhraseAnnotationEnriched;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.languagetool.LanguageToolSegmenter;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordNamedEntityRecognizer;
 import edu.upf.glicom.uima.ae.ConfirmLinkAnnotator;
-import edu.upf.glicom.uima.ts.VerifiedDBpediaResource;
 import eu.eumssi.api.json.uima.JSONMeta.StatusType;
 
+import org.apache.solr.client.solrj.util.ClientUtils;
 
 /**
  * This class represents the QueryManager component which interfaces with the backend MongoDB.
@@ -204,6 +199,8 @@ public class UimaManager {
 			jCas.setDocumentLanguage("en");
 			this.ae.process(jCas);
 
+			List<String> dbpediaUris = new ArrayList<String>();
+			
 			Map<String, Object> dbpediaMap = new HashMap<String,Object>();
 			for (DBpediaResource resource : select(jCas, TopDBpediaResource.class)) {
 				// multiword or contains upper case
@@ -218,9 +215,12 @@ public class UimaManager {
 						addWithType(dbpediaMap, type, res);
 					}
 					addWithType(dbpediaMap, "all", res);
+					dbpediaUris.add(ClientUtils.escapeQueryChars(resource.getUri()));
 				}
 			}
 			analysisResult.put("dbpedia", dbpediaMap);
+
+			List<String> stanfordEntities = new ArrayList<String>();
 
 			Map<String, Object> stanfordMap = new HashMap<String,Object>();
 			for (NamedEntity entity : select(jCas, NamedEntity.class)) {
@@ -233,6 +233,7 @@ public class UimaManager {
 					addWithType(stanfordMap, type, res);
 				}
 				addWithType(stanfordMap, "all", res);
+				stanfordEntities.add(ClientUtils.escapeQueryChars(entity.getCoveredText()));
 			}
 			analysisResult.put("stanford", stanfordMap);
 
@@ -252,6 +253,18 @@ public class UimaManager {
 			}
 			keaList.sort(Comparator.comparingInt((Map<String, Object> k) -> (Integer) k.get("rank")));
 			analysisResult.put("kea", keaList);
+
+			String solrSimilarity = "";
+			
+			if (dbpediaUris.size() > 0) {
+				solrSimilarity += "meta.extracted.text_nerl.dbpedia.all:(" + String.join(" ", dbpediaUris) + ")";
+			}
+			if (stanfordEntities.size() > 0) {
+				solrSimilarity += " meta.extracted.text_nerl.ner.all:(" + String.join(" ", stanfordEntities) + ")";
+			}
+			HashMap<String, String> solrQueries = new HashMap<String,String>();
+			solrQueries.put("similarity", solrSimilarity);
+			analysisResult.put("solr", solrQueries);
 
 			return analysisResult;
 		} catch (UIMAException e) {
