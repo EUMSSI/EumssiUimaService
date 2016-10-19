@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.eumssi</groupId>
 	<artifactId>EumssiUimaService</artifactId>
-	<version>0.2.3</version>
+	<version>0.2.4</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -143,7 +143,7 @@
 		<dependency>
 			<groupId>com.iai.uima</groupId>
 			<artifactId>kea-annotator</artifactId>
-			<version>0.1-SNAPSHOT</version>
+			<version>0.1.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
