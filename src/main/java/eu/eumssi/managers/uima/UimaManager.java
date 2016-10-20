@@ -19,6 +19,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -35,13 +36,10 @@ import com.iai.uima.jcas.tcas.KeyPhraseAnnotationDeprecated;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.languagetool.LanguageToolSegmenter;
-import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordNamedEntityRecognizer;
-import edu.upf.glicom.uima.ae.ConfirmLinkAnnotator;
-import eu.eumssi.api.json.uima.JSONMeta.StatusType;
-
-import org.apache.solr.client.solrj.util.ClientUtils;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpChunker;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpPosTagger;
+import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordNamedEntityRecognizer;
+import eu.eumssi.api.json.uima.JSONMeta.StatusType;
 
 /**
  * This class represents the QueryManager component which interfaces with the backend MongoDB.
@@ -123,17 +121,14 @@ public class UimaManager {
 
 		AnalysisEngineDescription ner = createEngineDescription(StanfordNamedEntityRecognizer.class);
 
-		AnalysisEngineDescription validate = createEngineDescription(ConfirmLinkAnnotator.class);
-		
 		AnalysisEngineDescription pos = createEngineDescription(OpenNlpPosTagger.class,
 				OpenNlpPosTagger.PARAM_LANGUAGE,"en");
+		
 		AnalysisEngineDescription chunk = createEngineDescription(OpenNlpChunker.class,
 				OpenNlpChunker.PARAM_LANGUAGE,"en");
 		
 		AnalysisEngineDescription key = createEngineDescription(KeyPhraseAnnotator.class,
-				KeyPhraseAnnotator.PARAM_LANGUAGE, "en",
-				KeyPhraseAnnotator.PARAM_KEYPHRASE_RATIO, 80
-				);
+				KeyPhraseAnnotator.PARAM_LANGUAGE, "en");
 
 		//this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, validate));
 		this.ae = createEngine(createEngineDescription(segmenter, dbpedia, ner, pos, chunk, key));

@@ -97,48 +97,11 @@
 			<groupId>edu.upf.glicom.uima</groupId>
 			<artifactId>dbpedia-spotlight</artifactId>
 			<version>0.8-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jersey-bundle</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jersey-client</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jersey-core</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>eu.eumssi.uima</groupId>
 			<artifactId>EumssiTS</artifactId>
 			<version>0.0.4</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.upf.glicom.uima</groupId>
-			<artifactId>ConfirmLinkAnnotator</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jersey-bundle</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jersey-client</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jersey-core</artifactId>
-					<groupId>com.sun.jersey</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>uima</artifactId>
-					<groupId>org.dbpedia.spotlight</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.iai.uima</groupId>
