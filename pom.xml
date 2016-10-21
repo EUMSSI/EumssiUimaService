@@ -145,6 +145,11 @@
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.opennlp-model-chunker-en-default</artifactId>
 			<version>20100908.1</version>
 		</dependency>
+<dependency>
+  <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+  <artifactId>de.tudarmstadt.ukp.dkpro.core.opennlp-model-tagger-en-maxent</artifactId>
+  <version>20120616.1</version>
+</dependency>
 	</dependencies>
 	<properties>
 		<jersey.version>2.22</jersey.version>
